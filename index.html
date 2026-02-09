@@ -1,0 +1,83 @@
+<div id="cmq-root" style="width:100%;max-width:900px;margin:0 auto;padding:40px 20px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;box-sizing:border-box;">
+
+  <div class="cmq-box">
+    <div class="cmq-header">
+      <h2>¿No sabés qué comprar?</h2>
+      <p>Respondé estas preguntas y te guiamos</p>
+    </div>
+
+    <div class="cmq-progress">
+      <div class="cmq-bar"><div class="cmq-bar-fill"></div></div>
+      <div class="cmq-step-text"></div>
+    </div>
+
+    <div class="cmq-body"></div>
+
+    <div class="cmq-footer">
+      <button class="cmq-back">Volver</button>
+      <button class="cmq-next">Siguiente</button>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  .cmq-box{background:#fff;border-radius:16px;padding:30px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+  .cmq-header h2{margin:0;font-size:28px;color:#111}
+  .cmq-header p{margin:6px 0 0;color:#555}
+  .cmq-progress{margin:25px 0}
+  .cmq-bar{height:6px;background:#eee;border-radius:6px;overflow:hidden}
+  .cmq-bar-fill{height:100%;width:0;background:#ff6b35;transition:width .3s}
+  .cmq-step-text{margin-top:8px;font-size:13px;color:#666;text-align:center}
+  .cmq-body{margin-top:25px}
+  .cmq-question{font-size:20px;font-weight:700;margin-bottom:18px}
+  .cmq-option{border:2px solid #ddd;border-radius:10px;padding:14px 16px;margin-bottom:12px;cursor:pointer;font-weight:600}
+  .cmq-option.active{border-color:#ff6b35;background:#fff3ee}
+  .cmq-footer{display:flex;justify-content:space-between;margin-top:20px}
+  .cmq-back{background:none;border:none;color:#666;font-weight:600;cursor:pointer}
+  .cmq-next{background:#ff6b35;color:#fff;border:none;padding:12px 22px;border-radius:8px;font-weight:700;cursor:pointer}
+  .cmq-next:disabled{opacity:.5}
+</style>
+
+<script>
+(function(){
+  const steps=[
+    {k:"ambiente",q:"¿Para qué ambiente?",o:["Dormitorio","Living","Comedor","Oficina"]},
+    {k:"presupuesto",q:"¿Presupuesto?",o:["Económico","Intermedio","Premium"]},
+    {k:"estilo",q:"¿Qué estilo?",o:["Moderno","Minimalista","Clásico","Rústico"]},
+    {k:"hogar",q:"¿Cuántas personas viven en el hogar?",o:["1","2","3","4 o más"]}
+  ]
+
+  let i=0,a={}
+  const root=document.getElementById("cmq-root")
+  const body=root.querySelector(".cmq-body")
+  const bar=root.querySelector(".cmq-bar-fill")
+  const stepText=root.querySelector(".cmq-step-text")
+  const back=root.querySelector(".cmq-back")
+  const next=root.querySelector(".cmq-next")
+
+  function render(){
+    const s=steps[i]
+    bar.style.width=((i+1)/steps.length*100)+"%"
+    stepText.textContent="Pregunta "+(i+1)+" de "+steps.length
+    back.style.visibility=i===0?"hidden":"visible"
+    next.textContent=i===steps.length-1?"Ver resultados":"Siguiente"
+    next.disabled=!a[s.k]
+
+    body.innerHTML='<div class="cmq-question">'+s.q+'</div>'+
+      s.o.map(v=>'<div class="cmq-option'+(a[s.k]===v?' active':'')+'" data-v="'+v+'">'+v+'</div>').join("")
+
+    body.querySelectorAll(".cmq-option").forEach(el=>{
+      el.onclick=()=>{a[s.k]=el.dataset.v;render()}
+    })
+  }
+
+  back.onclick=()=>{if(i>0){i--;render()}}
+  next.onclick=()=>{
+    if(i<steps.length-1){i++;render()}
+    else location.href="/catalogo"
+  }
+
+  render()
+})()
+</script>

@@ -37,15 +37,80 @@
   .cmq-back{background:none;border:none;color:#666;font-weight:600;cursor:pointer}
   .cmq-next{background:#ff6b35;color:#fff;border:none;padding:12px 22px;border-radius:8px;font-weight:700;cursor:pointer}
   .cmq-next:disabled{opacity:.5}
+  .cmq-results{text-align:center}
+  .cmq-results h2{color:#111;margin-bottom:10px}
+  .cmq-results p{color:#666;margin-bottom:30px}
+  .cmq-products{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-top:20px}
+  .cmq-product{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px;cursor:pointer;transition:all .3s;text-decoration:none;color:inherit}
+  .cmq-product:hover{transform:translateY(-4px);box-shadow:0 8px 25px rgba(0,0,0,.15);border-color:#ff6b35}
+  .cmq-product-img{width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:12px}
+  .cmq-product-name{font-weight:600;color:#111;margin-bottom:8px;font-size:16px}
+  .cmq-product-desc{color:#666;font-size:14px;line-height:1.4}
+  .cmq-back-to-quiz{background:none;border:2px solid #ff6b35;color:#ff6b35;padding:10px 20px;border-radius:8px;font-weight:600;cursor:pointer;margin-top:30px}
 </style>
 
 <script>
 (function(){
   const steps=[
-    {k:"ambiente",q:"¿Para qué ambiente?",o:["Dormitorio","Living","Comedor","Oficina"]},
-    {k:"presupuesto",q:"¿Presupuesto?",o:["Económico","Intermedio","Premium"]},
-    {k:"estilo",q:"¿Qué estilo?",o:["Moderno","Minimalista","Clásico","Rústico"]},
-    {k:"hogar",q:"¿Cuántas personas viven en el hogar?",o:["1","2","3","4 o más"]}
+    {k:"ambiente",q:"¿Para qué ambiente desea ver productos?",o:["Dormitorio","Living","Comedor","Oficina"]},
+    {k:"presupuesto",q:"¿Cual es su presupuesto estimado?",o:["Económico","Intermedio","Premium"]},
+    {k:"estilo",q:"¿Qué estilo es de su preferencia?",o:["Moderno","Minimalista","Clásico","Rústico"]},
+    {k:"uso_persona",q:"¿Para cuántas personas es el producto?",o:["Para 1 persona","Para 2 personas","Para 3 o más personas"]},
+    {k:"edad_persona",q:"¿Para quién está pensado principalmente?",o:["Adulto","Joven","Niño","Anciano"]}
+  ]
+
+  // Todos los productos con metadatos para matching inteligente
+  const allProducts=[
+    // DORMITORIO
+    {name:"Sommier Wish King",img:"https://f.fcdn.app/imgs/f8cf74/www.compramas.com.uy/comauy/436b/webp/catalogo/SO-Wish18_SO-Wish18_2/1500-1500/sommier-king-size-base-cama-colchon-de-espuma-y-resorte-pocket-sommier-king-size-base-cama-colchon-de-espuma-y-resorte-pocket.jpg",desc:"SOMMIER KING SIZE BASE CAMA COLCHÓN DE ESPUMA Y RESORTE POCKET",url:"/catalogo/sommier-king-size-base-cama-colchon-de-espuma-y-resorte-pocket_SO-Wish18_SO-Wish18",ambiente:["Dormitorio"],presupuesto:["Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas"],edad_persona:["Adulto","Joven","Anciano"]},
+    {name:"Sommier Wish Queen",img:"https://f.fcdn.app/imgs/f8fc49/www.compramas.com.uy/comauy/436b/webp/catalogo/SO-Wish16_SO-Wish16_2/1500-1500/sommier-queen-size-base-cama-colchon-de-espuma-y-resorte-pocket-sommier-queen-size-base-cama-colchon-de-espuma-y-resorte-pocket.jpg",desc:"SOMMIER QUEEN SIZE BASE CAMA COLCHÓN DE ESPUMA Y RESORTE POCKET",url:"/catalogo/sommier-queen-size-base-cama-colchon-de-espuma-y-resorte-pocket_SO-Wish16_SO-Wish16",ambiente:["Dormitorio"],presupuesto:["Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas"],edad_persona:["Adulto","Joven","Anciano"]},
+    {name:"Sommier Wish 2 plazas",img:"https://f.fcdn.app/imgs/3fe4ad/www.compramas.com.uy/comauy/a884/webp/catalogo/SO-WISH14_SO-WISH14_2/1500-1500/sommier-2-plazas-base-cama-colchon-de-espuma-y-resorte-pocket-sommier-2-plazas-base-cama-colchon-de-espuma-y-resorte-pocket.jpg",desc:"SOMMIER 2 PLAZAS BASE CAMA COLCHÓN DE ESPUMA Y RESORTE POCKET",url:"/catalogo/sommier-2-plazas-base-cama-colchon-de-espuma-y-resorte-pocket_SO-WISH14_SO-WISH14",ambiente:["Dormitorio"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas"],edad_persona:["Adulto","Joven","Anciano"]},
+    {name:"Sommier Wish 1/2",img:"https://f.fcdn.app/imgs/7313ff/www.compramas.com.uy/comauy/06c2/webp/catalogo/So-Wish12_So-Wish12_1/1000x1000/sommier-plaza-y-media-base-cama-colchon-de-espuma-y-resorte-pocket-sommier-plaza-y-media-base-cama-colchon-de-espuma-y-resorte-pocket.jpg",desc:"SOMMIER PLAZA Y MEDIA BASE CAMA COLCHÓN DE ESPUMA Y RESORTE POCKET",url:"/catalogo/sommier-plaza-y-media-base-cama-colchon-de-espuma-y-resorte-pocket_So-Wish12_So-Wish12",ambiente:["Dormitorio"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Adulto","Anciano"]},
+    {name:"Sommier Wish 1 plaza",img:"https://f.fcdn.app/imgs/d506d9/www.compramas.com.uy/comauy/f57b/webp/catalogo/SOM-WISH88_SOM-WISH88_2/1500-1500/sommier-1-plaza-base-cama-colchon-de-espuma-y-resorte-pocket-sommier-1-plaza-base-cama-colchon-de-espuma-y-resorte-pocket.jpg",desc:"SOMMIER 1 PLAZA BASE CAMA COLCHÓN DE ESPUMA Y RESORTE POCKET",url:"/catalogo/sommier-1-plaza-base-cama-colchon-de-espuma-y-resorte-pocket_SOM-WISH88_SOM-WISH88",ambiente:["Dormitorio"],presupuesto:["Intermedio", "Económico"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Niño"]},
+
+    {name:"Baul Queen",img:"https://f.fcdn.app/imgs/70f86d/www.compramas.com.uy/comauy/99d7/webp/catalogo/BAUL-160_BAUL-160GR_1/1500-1500/box-baul-queen-size-base-de-sommier-guardarropa-cama-importado-gris.jpg",desc:"BOX BAÙL QUEEN SIZE BASE DE SOMMIER GUARDARROPA CAMA IMPORTADO",url:"/catalogo/box-baul-queen-size-base-de-sommier-guardarropa-cama-importado-gris_BAUL-160_BAUL-160GR",ambiente:["Dormitorio"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas"],edad_persona:["Adulto","Joven","Anciano"]},
+    {name:"Baul 2 plazas",img:"https://f.fcdn.app/imgs/872192/www.compramas.com.uy/comauy/a610/webp/catalogo/BAUL-140_BAUL-140GR_1/1500-1500/box-baul-2-plazas-base-de-sommier-guardarropa-cama-gris.jpg",desc:"BOX BAÚL 2 PLAZAS BASE DE SOMMIER GUARDARROPA CAMA",url:"/catalogo/box-baul-2-plazas-base-de-sommier-guardarropa-cama-gris_BAUL-140_BAUL-140GR",ambiente:["Dormitorio"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas"],edad_persona:["Adulto","Joven","Anciano"]},
+    {name:"Baul 1/2",img:"https://f.fcdn.app/imgs/3ee550/www.compramas.com.uy/comauy/587b/webp/catalogo/BAUL_-12GR_1/1500-1500/box-baul-plaza-y-media-base-guadarropa-cama-gris.jpg",desc:"BOX BAÚL PLAZA Y MEDIA BASE GUADARROPA CAMA",url:"/catalogo/box-baul-plaza-y-media-base-guadarropa-cama-gris_BAUL_-12GR",ambiente:["Dormitorio"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Adulto","Anciano"]},
+    {name:"Baul 1 plaza",img:"https://f.fcdn.app/imgs/490555/www.compramas.com.uy/comauy/1ba1/webp/catalogo/BAUL-090_BAUL-090GR_1/1500-1500/box-baul-1-plazas-base-de-sommier-guardarropa-cama-con-apertura-lateral-gris.jpg",desc:"BOX BAÙL 1 PLAZAS BASE DE SOMMIER GUARDARROPA CAMA CON APERTURA LATERAL",url:"/catalogo/box-baul-1-plazas-base-de-sommier-guardarropa-cama-con-apertura-lateral-gris_BAUL-090_BAUL-090GR",ambiente:["Dormitorio"],presupuesto:["Intermedio", "Económico"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Niño"]},
+
+    {name:"Ropero americano",img:"https://f.fcdn.app/imgs/042b08/www.compramas.com.uy/comauy/4139/webp/catalogo/RP-2630BL_RP-2630BL_1/1500-1500/ropero-6-puertas-3-cajones-guardarropa-armario-placard-closet-linea-americana-ropero-6-puertas-3-cajones-guardarropa-armario-placard-closet-linea-americana.jpg",desc:"ROPERO 6 PUERTAS 3 CAJONES GUARDARROPA ARMARIO PLACARD CLOSET",url:"/catalogo/ropero-6-puertas-3-cajones-guardarropa-armario-placard-closet-linea-americana_RP-2630BL_RP-2630BL",ambiente:["Dormitorio"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 3 o más personas","Para 2 personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Ropero 6 puertas",img:"https://f.fcdn.app/imgs/97b8a0/www.compramas.com.uy/comauy/0610/webp/catalogo/B375-215_B375-215_1/1500-1500/ropero-6-puertas-3-cajones-guardarropa-armario-placard-closet-ropero-6-puertas-3-cajones-guardarropa-armario-placard-closet.jpg",desc:"ROPERO 6 PUERTAS 3 CAJONES GUARDARROPA ARMARIO PLACARD CLOSET",url:"/catalogo/ropero-6-puertas-3-cajones-guardarropa-armario-placard-closet_B375-215_B375-215",ambiente:["Dormitorio"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas","Para 3 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Cómoda Clásica",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Comoda",desc:"Cómoda espaciosa para dormitorio",url:"/producto/comoda-6-cajones",ambiente:["Dormitorio"],presupuesto:["Intermedio","Premium"],estilo:["Clásico","Rústico"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Cómoda Clásica",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Comoda",desc:"Cómoda espaciosa para dormitorio",url:"/producto/comoda-6-cajones",ambiente:["Dormitorio"],presupuesto:["Intermedio","Premium"],estilo:["Clásico","Rústico"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Cómoda Clásica",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Comoda",desc:"Cómoda espaciosa para dormitorio",url:"/producto/comoda-6-cajones",ambiente:["Dormitorio"],presupuesto:["Intermedio","Premium"],estilo:["Clásico","Rústico"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Cómoda Clásica",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Comoda",desc:"Cómoda espaciosa para dormitorio",url:"/producto/comoda-6-cajones",ambiente:["Dormitorio"],presupuesto:["Intermedio","Premium"],estilo:["Clásico","Rústico"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+
+    {name:"Espejo Minimalista",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Espejo",desc:"Espejo decorativo de 80cm",url:"/producto/espejo-circular",ambiente:["Dormitorio"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona","Para 2 personas"],edad_persona:["Joven","Adulto"]},
+
+    // LIVING
+    {name:"Sofá 4 Cuerpos Premium",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Sofa+4",desc:"Sofá amplio para familias grandes",url:"/producto/sofa-4-cuerpos",ambiente:["Living"],presupuesto:["Premium"],estilo:["Moderno","Clásico"],uso_persona:["Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Sofá 3 Cuerpos",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Sofa+3",desc:"Sofá cómodo para toda la familia",url:"/producto/sofa-3-cuerpos",ambiente:["Living"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Clásico"],uso_persona:["Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Joven"]},
+    {name:"Sofá 2 Cuerpos Minimalista",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Sofa+2",desc:"Sofá compacto y moderno",url:"/producto/sofa-2-cuerpos",ambiente:["Living"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona","Para 2 personas"],edad_persona:["Joven","Adulto"]},
+    {name:"Sillón Individual",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Sillon",desc:"Sillón cómodo para relajarse",url:"/producto/sillon-individual",ambiente:["Living"],presupuesto:["Económico","Intermedio"],estilo:["Clásico","Rústico"],uso_persona:["Para 1 persona"],edad_persona:["Adulto","Anciano"]},
+    {name:"Mesa Ratona Cristal",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Mesa+Ratona",desc:"Mesa ratona de cristal templado",url:"/producto/mesa-ratona-cristal",ambiente:["Living"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Joven"]},
+    {name:"Mesa Ratona Madera",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Mesa+Madera",desc:"Mesa ratona rústica de madera",url:"/producto/mesa-ratona-madera",ambiente:["Living"],presupuesto:["Económico","Intermedio"],estilo:["Clásico","Rústico"],uso_persona:["Para 2 personas","Para 3 personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Rack TV Moderno",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Rack+TV",desc:"Rack para TV hasta 55 pulgadas",url:"/producto/rack-tv-55",ambiente:["Living"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Joven","Adulto"]},
+    {name:"Lámpara de Pie LED",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Lampara",desc:"Lámpara moderna con dimmer",url:"/producto/lampara-pie-led",ambiente:["Living"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona","Para 2 personas"],edad_persona:["Joven","Adulto"]},
+
+    // COMEDOR
+    {name:"Mesa Familiar 8 Personas",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Mesa+8",desc:"Mesa extensible para familias grandes",url:"/producto/mesa-8-personas",ambiente:["Comedor"],presupuesto:["Premium"],estilo:["Clásico","Rústico"],uso_persona:["Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Mesa Extensible 6 Personas",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Mesa+6",desc:"Mesa que se extiende hasta 8 personas",url:"/producto/mesa-extensible-6",ambiente:["Comedor"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Clásico"],uso_persona:["Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Joven"]},
+    {name:"Mesa 4 Personas Compacta",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Mesa+4",desc:"Mesa ideal para espacios pequeños",url:"/producto/mesa-4-personas",ambiente:["Comedor"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas","Para 3 personas"],edad_persona:["Joven","Adulto"]},
+    {name:"Mesa Bistró 2 Personas",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Bistro",desc:"Mesa íntima para dos personas",url:"/producto/mesa-bistro",ambiente:["Comedor"],presupuesto:["Económico"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona","Para 2 personas"],edad_persona:["Joven","Adulto"]},
+    {name:"Sillas Modernas x4",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Sillas+4",desc:"Set de 4 sillas modernas",url:"/producto/sillas-modernas-x4",ambiente:["Comedor"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 3 personas","Para 4 o más personas"],edad_persona:["Joven","Adulto"]},
+    {name:"Sillas Tapizadas x6",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Sillas+6",desc:"Set de 6 sillas tapizadas premium",url:"/producto/sillas-tapizadas-x6",ambiente:["Comedor"],presupuesto:["Premium"],estilo:["Clásico","Rústico"],uso_persona:["Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+    {name:"Aparador Moderno",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Aparador",desc:"Aparador con puertas y cajones",url:"/producto/aparador-moderno",ambiente:["Comedor"],presupuesto:["Intermedio","Premium"],estilo:["Moderno","Minimalista"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Joven"]},
+    {name:"Lámpara Colgante Rústica",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Colgante",desc:"Lámpara colgante estilo rústico",url:"/producto/lampara-colgante-rustica",ambiente:["Comedor"],presupuesto:["Intermedio"],estilo:["Clásico","Rústico"],uso_persona:["Para 2 personas","Para 3 personas","Para 4 o más personas"],edad_persona:["Adulto","Anciano"]},
+
+    // OFICINA
+    {name:"Escritorio Ejecutivo L",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Escritorio+L",desc:"Escritorio en L con cajones",url:"/producto/escritorio-l-ejecutivo",ambiente:["Oficina"],presupuesto:["Premium"],estilo:["Moderno","Clásico"],uso_persona:["Para 1 persona"],edad_persona:["Adulto"]},
+    {name:"Escritorio Moderno Simple",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Escritorio",desc:"Escritorio minimalista y funcional",url:"/producto/escritorio-simple",ambiente:["Oficina"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Adulto"]},
+    {name:"Escritorio Infantil",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Escritorio+Niño",desc:"Escritorio ajustable para niños",url:"/producto/escritorio-infantil",ambiente:["Oficina"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Niño"]},
+    {name:"Escritorio para Anciano",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Escritorio+Senior",desc:"Escritorio ergonómico para adultos mayores",url:"/producto/escritorio-anciano",ambiente:["Oficina"],presupuesto:["Intermedio","Premium"],estilo:["Clásico"],uso_persona:["Para 1 persona"],edad_persona:["Anciano"]},
+    {name:"Silla Ergonómica Premium",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Silla+Ergo",desc:"Silla ergonómica con soporte lumbar",url:"/producto/silla-ergonomica",ambiente:["Oficina"],presupuesto:["Intermedio","Premium"],estilo:["Moderno"],uso_persona:["Para 1 persona"],edad_persona:["Adulto","Anciano"]},
+    {name:"Silla de Oficina Económica",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Silla+Eco",desc:"Silla de oficina básica y cómoda",url:"/producto/silla-economica",ambiente:["Oficina"],presupuesto:["Económico"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Adulto"]},
+    {name:"Biblioteca Modular",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=Biblioteca",desc:"Biblioteca modular ajustable",url:"/producto/biblioteca-5-estantes",ambiente:["Oficina"],presupuesto:["Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Adulto","Joven"]},
+    {name:"Lámpara Escritorio LED",img:"https://via.placeholder.com/200x150/ff6b35/ffffff?text=LED",desc:"Lámpara LED con brazo articulado",url:"/producto/lampara-escritorio-led",ambiente:["Oficina"],presupuesto:["Económico","Intermedio"],estilo:["Moderno","Minimalista"],uso_persona:["Para 1 persona"],edad_persona:["Joven","Adulto","Niño"]}
   ]
 
   let i=0,a={}
@@ -71,13 +136,78 @@
       el.onclick=()=>{a[s.k]=el.dataset.v;render()}
     })
   }
+  // Función para calcular score de coincidencia de producto con respuestas
+  function calculateScore(product, answers) {
+    let score = 0
 
-  back.onclick=()=>{if(i>0){i--;render()}}
-  next.onclick=()=>{
-    if(i<steps.length-1){i++;render()}
-    else location.href="/catalogo"
+    // Ambiente (peso: 3 - fundamental)
+    if (product.ambiente.includes(answers.ambiente)) score += 3
+
+    // Presupuesto (peso: 2 - importante)
+    if (product.presupuesto.includes(answers.presupuesto)) score += 2
+
+    // Estilo (peso: 2 - importante para estética)
+    if (product.estilo.includes(answers.estilo)) score += 2
+
+    // Uso persona (peso: 2 - importante para funcionalidad)
+    if (product.uso_persona.includes(answers.uso_persona)) score += 2
+
+    // Edad persona (peso: 1 - relevante pero menor)
+    if (product.edad_persona.includes(answers.edad_persona)) score += 1
+
+    return score
   }
 
+  function showResults(){
+    // Calcular score para todos los productos
+    const scoredProducts = allProducts.map(product => ({
+      ...product,
+      score: calculateScore(product, a)
+    }))
+
+    // Ordenar por score descendente y tomar los mejores 4
+    const recommendedProducts = scoredProducts
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+
+    // Generar mensaje personalizado basado en respuestas
+    const ambiente = a.ambiente || "tu espacio"
+    const estilo = a.estilo || "tu estilo preferido"
+    const presupuesto = a.presupuesto || "tu presupuesto"
+
+    root.querySelector(".cmq-header h2").textContent="¡Estos productos son perfectos para vos!"
+    root.querySelector(".cmq-header p").textContent=`Basado en tus respuestas (${ambiente}, ${estilo}, ${presupuesto}), seleccionamos estos productos ideales`
+    root.querySelector(".cmq-progress").style.display="none"
+    root.querySelector(".cmq-footer").innerHTML='<button class="cmq-back-to-quiz">Hacer el quiz de nuevo</button>'
+
+    body.innerHTML='<div class="cmq-results"><div class="cmq-products">'+
+      recommendedProducts.map(p=>
+        '<a href="'+p.url+'" class="cmq-product">'+
+          '<img src="'+p.img+'" alt="'+p.name+'" class="cmq-product-img">'+
+          '<div class="cmq-product-name">'+p.name+'</div>'+
+          '<div class="cmq-product-desc">'+p.desc+'</div>'+
+        '</a>'
+      ).join("")+
+    '</div></div>'
+
+    root.querySelector(".cmq-back-to-quiz").onclick=()=>{
+      i=0;a={}
+      root.querySelector(".cmq-header h2").textContent="¿No sabés qué comprar?"
+      root.querySelector(".cmq-header p").textContent="Respondé estas preguntas y te guiamos"
+      root.querySelector(".cmq-progress").style.display="block"
+      root.querySelector(".cmq-footer").innerHTML='<button class="cmq-back">Volver</button><button class="cmq-next">Siguiente</button>'
+      bindEvents()
+      render()
+    }
+  }
+
+  function bindEvents(){
+    const backBtn=root.querySelector(".cmq-back")
+    const nextBtn=root.querySelector(".cmq-next")
+    backBtn.onclick=()=>{if(i>0){i--;render()}}
+    nextBtn.onclick=()=>{if(i<steps.length-1){i++;render()}else showResults()}
+  }
+  bindEvents()
   render()
 })()
 </script>
